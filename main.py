@@ -11,8 +11,10 @@ from torch.utils.data import DataLoader
 
 # this will check if the device has a valid gpu for the training
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(f'device: {device}')
 
 # Grab the data from the csv files
+print('Gathering data from csv')
 training_data = StockTradingDataset('datasets/stock prices.csv', train=True)
 validation_data = StockTradingDataset('datasets/stock prices.csv', train=False)
 
@@ -33,7 +35,6 @@ model = MLP(input_size, hidden_size, output_size)
 
 # set the model to use the selected device so that if there is a gpu available
 # it will use that for a much more faster and accurate training of the llm
-model.device(device)
 criterion = nn.CrossEntropyLoss()  # Suitable for classification tasks
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 

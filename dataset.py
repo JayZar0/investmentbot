@@ -24,7 +24,7 @@ class StockTradingDataset(Dataset):
         # need to convert dates into a string format so that I can perform analysis
         # based on the price of that stock during that day.
         # Convert to timestamp
-        data['timestamp'] = data[1].apply(lambda x: pd.Timestamp(x).timestamp())
+        self.dates = pd.to_datetime(data[:, 1], format="%Y-%m-%d")
 
     def __len__(self):
         return len(self.data)
