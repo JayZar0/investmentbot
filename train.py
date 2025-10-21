@@ -19,7 +19,7 @@ def train_llm(dataloader, model, criterion, optimizer):
 
         print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
 
-# This funciton is the validation function that wil be used the make sure
+# This function is the validation function that wil be used the make sure
 # that the training is accurate to what teh llm need to done
 def validate_training(test_dataloader, model):
     model.eval()  # Set model to evaluation mode

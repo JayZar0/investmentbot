@@ -27,16 +27,18 @@ validation_dataloader = DataLoader(validation_data, batch_size=batch_size)
 
 # set the layers size for the neural network out here rather than in the
 # file/function itself
-input_size = 784  # Example: for MNIST dataset (28x28 images)
+input_size = 2  # Example: for MNIST dataset (28x28 images)
 hidden_size = 128
-output_size = 10   # Example: 10 classes for classification
+output_size = 5   # Example: 10 classes for classification
 
+# Create model used to be trained and then allow it to use either the cpu or the gpu.
 model = MLP(input_size, hidden_size, output_size)
+model.to(device)
 
-# set the model to use the selected device so that if there is a gpu available
-# it will use that for a much more faster and accurate training of the llm
 criterion = nn.CrossEntropyLoss()  # Suitable for classification tasks
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
+# train the model once everything has been initialized
+print('Training model')
 train_llm(training_dataloader, model, criterion, optimizer)
 validate_training(validation_dataloader, model)

@@ -17,14 +17,10 @@ class StockTradingDataset(Dataset):
             data = data[int(len(data) * 0.8):]
 
         # We'll store the data and the labels separately, since one of them
-        # will start off as strings and we'll
+        # will start off as strings
+        self.data = pd.to_datetime(data[:, 1], format="%Y-%m-%d")
         self.data = data[:, 2:6].astype(np.float32)
         self.classes, self.label = np.unique(data[:, 0], return_inverse=True)
-
-        # need to convert dates into a string format so that I can perform analysis
-        # based on the price of that stock during that day.
-        # Convert to timestamp
-        self.dates = pd.to_datetime(data[:, 1], format="%Y-%m-%d")
 
     def __len__(self):
         return len(self.data)
