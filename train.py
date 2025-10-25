@@ -4,20 +4,21 @@ import torch
 ## for the llm
 
 # This function is the training function that will use the dataset provided
-def train_llm(dataloader, model, criterion, optimizer):
-    num_epochs = 10
-    for epoch in range(num_epochs):
-        for inputs, labels in dataloader:  # Assume `dataloader` is defined
-            # Forward pass
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
+def train_llm(dataloader, model, criterion, optimizer, epoch, num_epoch):
+    epoch_loss = 0
+    model.train()
+    for inputs, labels in dataloader:  # Assume `dataloader` is defined
+        # Forward pass
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
 
-            # Backward pass and optimization
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
+        # Backward pass and optimization
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        epoch_loss += loss.item() * inputs.size(0)
+    epoch_loss /= len(dataloader.dataset)
+    print(f'Epoch [{epoch+1}/{num_epoch}], Loss: {epoch_loss:.4f}')
 
 # This function is the validation function that wil be used the make sure
 # that the training is accurate to what teh llm need to done

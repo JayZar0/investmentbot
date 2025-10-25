@@ -1,4 +1,4 @@
-
+import flask
 
 ## this file will be used use the functions of the bot and tell the user which
 ## stocks to invest in. I may also make everything automated if I get too lazy

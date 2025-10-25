@@ -16,16 +16,23 @@ class StockTradingDataset(Dataset):
         else:
             data = data[int(len(data) * 0.8):]
 
-        # We'll store the data and the labels separately, since one of them
-        # will start off as strings
-        self.data = pd.to_datetime(data[:, 1], format="%Y-%m-%d")
-        self.data = data[:, 2:6].astype(np.float32)
-        self.classes, self.label = np.unique(data[:, 0], return_inverse=True)
+        # Encode stock codes as integers
+        codes, code_labels = np.unique(data[:, 0], return_inverse=True)
+
+        # Convert dates to integer timestamps
+        dates_int = pd.to_datetime(data[:, 1], format="%Y-%m-%d").astype(np.int64)
+
+        # Convert outputs to float
+        outputs = data[:, 2:7].astype(np.float32)
+
+        # Combine stock code ID + timestamp as inputs
+        self.inputs = np.column_stack((code_labels, dates_int)).astype(np.float32)
+        self.outputs = outputs
 
     def __len__(self):
-        return len(self.data)
+        return len(self.inputs)
 
     def __getitem__(self, idx):
-        item_data = self.data[idx, 2:6]
-        item_label = self.label[idx]
-        return torch.from_numpy(item_data), item_label
+        x = torch.from_numpy(self.inputs[idx])      # shape (2,)
+        y = torch.from_numpy(self.outputs[idx])     # shape (5,)
+        return x, y
