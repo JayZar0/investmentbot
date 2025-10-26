@@ -8,7 +8,8 @@ from torch.utils.data import Dataset, DataLoader
 
 # This is the class that will initialize the dataset
 class StockTradingDataset(Dataset):
-    def __init__(self, csv_file, header=True, train=True):
+    def __init__(self, csv_file, header=True, train=True, device='cpu'):
+        self.device = device
         data = np.loadtxt(csv_file, delimiter=',', dtype=str, skiprows=1 if header else 0)
         # If we're training we'll use the first 80% of the data:
         if train:
@@ -33,6 +34,6 @@ class StockTradingDataset(Dataset):
         return len(self.inputs)
 
     def __getitem__(self, idx):
-        x = torch.from_numpy(self.inputs[idx])      # shape (2,)
-        y = torch.from_numpy(self.outputs[idx])     # shape (5,)
+        x = torch.from_numpy(self.inputs[idx]).to(device=self.device)      # shape (2,)
+        y = torch.from_numpy(self.outputs[idx]).to(device=self.device)     # shape (5,)
         return x, y

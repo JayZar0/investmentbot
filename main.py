@@ -15,8 +15,8 @@ print(f'device: {device}')
 
 # Grab the data from the csv files
 print('Gathering data from csv')
-training_data = StockTradingDataset('datasets/stock prices.csv', train=True)
-validation_data = StockTradingDataset('datasets/stock prices.csv', train=False)
+training_data = StockTradingDataset('datasets/stock prices modified.csv', train=True, device=device)
+validation_data = StockTradingDataset('datasets/stock prices modified.csv', train=False, device=device)
 
 # create a predetermined batch size for the training dataset
 batch_size = 4
@@ -26,10 +26,10 @@ training_dataloader = DataLoader(training_data, batch_size=batch_size)
 validation_dataloader = DataLoader(validation_data, batch_size=batch_size)
 
 # set the layers size for the neural network out here rather than in the
-# file/function itself
-input_size = 2  # Example: for MNIST dataset (28x28 images)
+# file/function itself so that everything can be modified in main
+input_size = 2
 hidden_size = 256
-output_size = 5   # Example: 10 classes for classification
+output_size = 5
 
 # Create model used to be trained and then allow it to use either the cpu or the gpu.
 model = MLP(input_size, hidden_size, output_size)
