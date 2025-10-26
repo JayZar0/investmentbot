@@ -23,14 +23,12 @@ def train_llm(dataloader, model, criterion, optimizer, epoch, num_epoch):
 # This function is the validation function that wil be used the make sure
 # that the training is accurate to what teh llm need to done
 def validate_training(test_dataloader, model):
-    model.eval()  # Set model to evaluation mode
+    model.eval()
+    mse_loss = 0.0
+    count = 0
     with torch.no_grad():
-        correct = 0
-        total = 0
-        for inputs, labels in test_dataloader:  # Assume `test_dataloader` is defined
+        for inputs, labels in test_dataloader:
             outputs = model(inputs)
-            _, predicted = torch.max(outputs, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
-
-        print(f'Accuracy: {100 * correct / total:.2f}%')
+            mse_loss += torch.mean((outputs - labels) ** 2).item()
+            count += 1
+    print(f'Validation MSE: {mse_loss / count:.4f}')
