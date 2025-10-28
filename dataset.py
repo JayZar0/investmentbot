@@ -28,6 +28,7 @@ class StockTradingDataset(Dataset):
 
         # Combine stock code ID + timestamp as inputs
         self.inputs = np.column_stack((code_labels, dates_int)).astype(np.float32)
+        print(self.inputs)
         self.outputs = outputs
 
     def __len__(self):

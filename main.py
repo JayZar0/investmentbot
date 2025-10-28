@@ -19,7 +19,7 @@ training_data = StockTradingDataset('datasets/stock prices modified.csv', train=
 validation_data = StockTradingDataset('datasets/stock prices modified.csv', train=False, device=device)
 
 # create a predetermined batch size for the training dataset
-batch_size = 4
+batch_size = 8
 
 # create the dataloader for training the llm
 training_dataloader = DataLoader(training_data, batch_size=batch_size)
