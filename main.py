@@ -18,6 +18,10 @@ print('Gathering data from csv')
 training_data = StockTradingDataset('datasets/stock prices modified.csv', train=True, device=device)
 validation_data = StockTradingDataset('datasets/stock prices modified.csv', train=False, device=device)
 
+# Dynamically determine input size from dataset (handles one-hot encoding and date features)
+input_size = training_data.inputs.shape[1]
+print(f'Input size determined from dataset: {input_size}')
+
 # create a predetermined batch size for the training dataset
 batch_size = 8
 
@@ -27,7 +31,6 @@ validation_dataloader = DataLoader(validation_data, batch_size=batch_size)
 
 # set the layers size for the neural network out here rather than in the
 # file/function itself so that everything can be modified in main
-input_size = 2
 hidden_size = 256
 output_size = 5
 
@@ -44,3 +47,17 @@ num_epochs = 10
 for epoch in range(num_epochs):
     train_llm(training_dataloader, model, criterion, optimizer, epoch=epoch, num_epoch=num_epochs)
     validate_training(validation_dataloader, model)
+
+# Save the trained model
+print('Saving trained model')
+model_save_path = 'models/trained_model.pth'
+import os
+os.makedirs('models', exist_ok=True)
+torch.save({
+    'model_state_dict': model.state_dict(),
+    'input_size': input_size,
+    'hidden_size': hidden_size,
+    'output_size': output_size,
+    'num_epochs': num_epochs,
+}, model_save_path)
+print(f'Model saved to {model_save_path}')
