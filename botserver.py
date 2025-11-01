@@ -24,6 +24,8 @@ from torch.utils.data import DataLoader
 ## I may also turn this to an api that can send graphs over to the front end.
 
 app = Flask(__name__)
+
+app = Flask(__name__)
 if cors_available:
     CORS(app)  # Enable CORS for frontend integration
 
@@ -53,6 +55,7 @@ def load_model():
 
 # This function will be called on the start of the stock market opening to create
 # the prediction of the stock market and which direction the stocks will take.
+@app.route("/create")
 def create_stock_data():
     """Create predictions for stock market at opening"""
     global stock_predictions
@@ -120,6 +123,7 @@ def select_stock():
 # This function will be used to correct any errors that were made during the
 # predictions that were made during the stock opening.
 # It will only be called if the error margin was over 5%.
+@app.route("/tune")
 def correct_errors():
     """Correct prediction errors if margin > 5%"""
     global error_corrections
@@ -156,6 +160,7 @@ def correct_errors():
 
 # This function will be used to save all the data of the stocks to create a
 # data validation to see if the model is headed in the right direction.
+@app.route("/close")
 def end_of_trades():
     """Save stock data for validation at end of trading day"""
     global stock_data_history
