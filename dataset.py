@@ -11,6 +11,78 @@ import os
 
 # This is the class that will initialize the dataset
 class StockTradingDataset(Dataset):
+    """
+    Dataset class for stock trading prediction.
+    
+    Key Design Philosophy:
+    - Stock codes are the PRIMARY prediction source
+    - Date features provide supplementary temporal context
+    - Uses one-hot encoding to ensure AI recognizes each stock as a distinct entity
+    - Maintains consistent encoding across training and inference
+    """
+    
+    @staticmethod
+    def prepare_stock_code_for_prediction(stock_code, date_str, scaler_dir='scalers'):
+        """
+        Static method to prepare stock code inputs for inference without loading full dataset.
+        
+        This is the PRIMARY method for making predictions - stock codes are the main feature.
+        
+        Args:
+            stock_code: Stock symbol (e.g., 'AAPL')
+            date_str: Date string in 'YYYY-MM-DD' format
+            scaler_dir: Directory containing saved scalers
+            
+        Returns:
+            np.ndarray: Preprocessed input features ready for model inference
+        """
+        import pickle
+        
+        # Load stock encoding information (PRIMARY FEATURE)
+        with open(os.path.join(scaler_dir, 'stock_encoder.pkl'), 'rb') as f:
+            code_encoder = pickle.load(f)
+            all_unique_stocks = pickle.load(f)
+            stock_to_idx = pickle.load(f)
+        
+        # Load date scaler (SUPPLEMENTARY FEATURE)
+        with open(os.path.join(scaler_dir, 'date_scaler.pkl'), 'rb') as f:
+            date_scaler_info = pickle.load(f)
+        
+        # Convert stock code to one-hot encoding (PRIMARY PREDICTION SOURCE)
+        if stock_code in stock_to_idx:
+            stock_idx = stock_to_idx[stock_code]
+            num_unique_stocks = len(all_unique_stocks)
+            stock_one_hot = np.zeros(num_unique_stocks, dtype=np.float32)
+            stock_one_hot[stock_idx] = 1.0
+        else:
+            raise ValueError(f"Stock code '{stock_code}' not found in training data. "
+                           f"Available stocks: {all_unique_stocks[:10]}...")
+        
+        # Extract date features (SUPPLEMENTARY CONTEXT)
+        date = pd.to_datetime(date_str, format="%Y-%m-%d")
+        date_features = np.zeros(6, dtype=np.float32)
+        
+        years = date.year
+        date_features[0] = (years - date_scaler_info['year_min']) / (date_scaler_info['year_max'] - date_scaler_info['year_min'] + 1e-8)
+        date_features[1] = date.month / 12.0
+        date_features[2] = date.day / 31.0
+        date_features[3] = date.dayofweek / 6.0
+        date_features[4] = date.dayofyear / 365.0
+        
+        # Days since training start date
+        days_since_start = (date - date_scaler_info['min_date']).days
+        date_features[5] = days_since_start / (date_scaler_info['max'] + 1e-8)
+        
+        # Combine: stock features (PRIMARY) + date features (SUPPLEMENTARY)
+        combined_features = np.hstack([stock_one_hot, date_features]).astype(np.float32)
+        
+        # Apply input normalization
+        with open(os.path.join(scaler_dir, 'input_scaler.pkl'), 'rb') as f:
+            input_scaler = pickle.load(f)
+        combined_features = input_scaler.transform(combined_features.reshape(1, -1)).flatten()
+        
+        return combined_features
+    
     def __init__(self, csv_file, header=True, train=True, device='cpu', 
                  normalize_inputs=True, normalize_outputs=True, use_one_hot=True,
                  scaler_dir='scalers'):
@@ -60,7 +132,8 @@ class StockTradingDataset(Dataset):
         
         if use_one_hot:
             # One-hot encoding for stocks using fixed mapping
-            # Map each stock to its index, then create one-hot vectors
+            # This makes stock codes the PRIMARY prediction source - each stock is treated
+            # as a completely distinct entity by the AI model
             code_indices = np.array([stock_to_idx[stock] for stock in self.stock_codes])
             stock_one_hot = np.zeros((len(code_indices), num_unique_stocks), dtype=np.float32)
             stock_one_hot[np.arange(len(code_indices)), code_indices] = 1.0
@@ -139,7 +212,8 @@ class StockTradingDataset(Dataset):
                     self.output_scaler = pickle.load(f)
                 outputs = self.output_scaler.transform(outputs)
         
-        # Combine features: stock features + date features
+        # Combine features: stock features (PRIMARY) + date features (SUPPLEMENTARY)
+        # Stock codes are the main prediction source, dates provide temporal context
         if use_one_hot:
             self.inputs = np.hstack([self.stock_features, date_features]).astype(np.float32)
         else:
@@ -180,3 +254,38 @@ class StockTradingDataset(Dataset):
                 outputs = outputs.cpu().numpy()
             return self.output_scaler.inverse_transform(outputs)
         return outputs
+    
+    def prepare_prediction_input(self, stock_code, date_str):
+        """
+        Instance method wrapper for prepare_stock_code_for_prediction.
+        
+        Stock codes are the PRIMARY prediction source - this method prepares them for inference.
+        
+        Args:
+            stock_code: Stock symbol (e.g., 'AAPL')
+            date_str: Date string in 'YYYY-MM-DD' format
+            
+        Returns:
+            np.ndarray: Preprocessed input features ready for model inference
+        """
+        return StockTradingDataset.prepare_stock_code_for_prediction(
+            stock_code, date_str, self.scaler_dir
+        )
+    
+    def get_input_size(self):
+        """
+        Get the input feature size used by this dataset.
+        
+        Returns:
+            int: Number of input features
+        """
+        return self.inputs.shape[1] if hasattr(self, 'inputs') else None
+    
+    def get_stock_codes(self):
+        """
+        Get list of all unique stock codes in the dataset.
+        
+        Returns:
+            list: Sorted list of all unique stock symbols
+        """
+        return self.all_unique_stocks if hasattr(self, 'all_unique_stocks') else []
